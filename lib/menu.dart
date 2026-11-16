@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+// Palet warna MyPortfolio.
+const Color burgundy = Color(0xFF500B1B);
+const Color cherryBlossom = Color(0xFFDDB5B5);
+const Color moss = Color(0xFF5B5429);
+const Color skyBlue = Color(0xFFB9C9CC);
+const Color sand = Color(0xFFEAE1D7);
+
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
 
@@ -8,25 +15,28 @@ class MyHomePage extends StatelessWidget {
   final String kelas = "PBP F";
 
   final List<ItemHomepage> items = [
-    ItemHomepage("Lihat Proyek", Icons.folder),
-    ItemHomepage("Tambah Proyek", Icons.add_circle),
-    ItemHomepage("Logout", Icons.logout),
+    ItemHomepage("Education", Icons.school, burgundy),
+    ItemHomepage("Experience", Icons.work, moss),
+    ItemHomepage("Add Education", Icons.add_circle, sand),
+    ItemHomepage("Add Experience", Icons.add_circle, skyBlue),
+    ItemHomepage("Logout", Icons.logout, cherryBlossom),
   ];
 
   @override
   Widget build(BuildContext context) {
     // Scaffold menyediakan struktur visual dasar halaman (AppBar, Body, SnackBar).
     return Scaffold(
+      backgroundColor: const Color(0xFFFAF7F4),
       // AppBar menampilkan bar bagian atas halaman aplikasi.
       appBar: AppBar(
         title: const Text(
           'MyPortfolio',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: burgundy,
       ),
       // Body halaman utama dengan padding di sekelilingnya.
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -58,18 +68,30 @@ class MyHomePage extends StatelessWidget {
                     ),
                   ),
 
-                  // GridView menampilkan kartu tombol dalam tata letak kisi 3 kolom.
+                  // GridView menampilkan kartu tombol dalam tata letak kisi 2 kolom.
                   GridView.count(
-                    primary: true,
+                    primary: false,
+                    physics: const NeverScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(20),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    crossAxisCount: 3,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    crossAxisCount: 2,
+                    childAspectRatio: 2.2,
                     // shrinkWrap agar ukuran kisi menyesuaikan tinggi konten anak.
                     shrinkWrap: true,
-                    children: items.map((ItemHomepage item) {
+                    children: items.take(4).map((ItemHomepage item) {
                       return ItemCard(item);
                     }).toList(),
+                  ),
+
+                  // Tombol Logout ditampilkan memanjang di tengah bawah.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 70,
+                      child: ItemCard(items[4]),
+                    ),
                   ),
                 ],
               ),
@@ -92,8 +114,10 @@ class InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       // Memberikan efek bayangan kartu elevasi 2 unit.
+      color: Colors.white,
       elevation: 2.0,
       child: Container(
+        height: 100,
         // Menyesuaikan lebar kartu dengan proporsi layar (dibagi 3.5).
         width: MediaQuery.of(context).size.width / 3.5,
         padding: const EdgeInsets.all(16.0),
@@ -113,8 +137,9 @@ class InfoCard extends StatelessWidget {
 class ItemHomepage {
   final String name;
   final IconData icon;
+  final Color color;
 
-  ItemHomepage(this.name, this.icon);
+  ItemHomepage(this.name, this.icon, this.color);
 }
 
 class ItemCard extends StatelessWidget {
@@ -124,9 +149,14 @@ class ItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Menentukan warna ikon dan teks agar kontras dengan background.
+    final Color foregroundColor = item.color == moss || item.color == burgundy
+        ? Colors.white
+        : burgundy;
+
     return Material(
-      // Menggunakan warna sekunder dari skema tema aplikasi.
-      color: Theme.of(context).colorScheme.secondary,
+      // Menggunakan warna yang sudah ditentukan untuk setiap tombol.
+      color: item.color,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         // Aksi ketika kartu ditekan oleh pengguna.
@@ -146,12 +176,15 @@ class ItemCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(item.icon, color: Colors.white, size: 30.0),
+                Icon(item.icon, color: foregroundColor, size: 26.0),
                 const Padding(padding: EdgeInsets.all(3)),
                 Text(
                   item.name,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(
+                    color: foregroundColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
