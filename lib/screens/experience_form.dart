@@ -16,11 +16,13 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   String _description = "";
   String _category = "Organization"; // default
   String _thumbnail = "";
+  String _startedAt = "";
+  String _endedAt = "";
 
   final List<String> _categories = [
     'Organization',
-    'Internship',
-    'Competition',
+    'Committee',
+    'Part-Time',
     'Volunteering',
     'Other',
   ];
@@ -31,10 +33,10 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
       appBar: AppBar(
         title: const Center(
           child: Text(
-            'Add Project Form',
+            'Add Experience Form',
           ),
         ),
-        backgroundColor: Colors.indigo,
+        backgroundColor: const Color(0xFF500B1B),
         foregroundColor: Colors.white,
       ),
       drawer: const LeftDrawer(),
@@ -158,6 +160,68 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                 ),
               ),
 
+              // === Start Date ===
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListTile(
+                  title: const Text("Start Date"),
+                  subtitle: Text(
+                    _startedAt.isEmpty ? "Select start date" : _startedAt,
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                    side: const BorderSide(color: Colors.grey),
+                  ),
+                  onTap: () async {
+                    final DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      setState(() {
+                        _startedAt =
+                            "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                      });
+                    }
+                  },
+                ),
+              ),
+
+              // === End Date ===
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListTile(
+                  title: const Text("End Date"),
+                  subtitle: Text(
+                    _endedAt.isEmpty ? "Select end date" : _endedAt,
+                  ),
+                  trailing: const Icon(Icons.calendar_today),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5.0),
+                    side: const BorderSide(color: Colors.grey),
+                  ),
+                  onTap: () async {
+                    final DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+
+                    if (pickedDate != null) {
+                      setState(() {
+                        _endedAt =
+                            "${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}";
+                      });
+                    }
+                  },
+                ),
+              ),
+
               // === Save Button ===
               Align(
                 alignment: Alignment.bottomCenter,
@@ -170,6 +234,16 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     ),
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
+                        if (_startedAt.isNotEmpty &&
+                            _endedAt.isNotEmpty &&
+                            DateTime.parse(_endedAt).isBefore(DateTime.parse(_startedAt))) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("End Date cannot be before Start Date."),
+                            ),
+                          );
+                          return;
+                        }
                         showDialog(
                           context: context,
                           builder: (context) {
