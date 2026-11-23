@@ -37,8 +37,14 @@ myportofolio_mobile/
 ├── android/                  # Proyek pembungkus native Android
 ├── ios/                      # Proyek pembungkus native iOS
 ├── lib/                      # Sumber kode utama Dart
-│   ├── main.dart             # Entry point aplikasi
-│   └── menu.dart             # Widget halaman utama dan komponen menu
+│   ├── main.dart                 # Entry point aplikasi
+│   ├── menu.dart                 # Widget halaman utama dan komponen menu
+│   ├── screens/                  # Halaman-halaman aplikasi
+│   │   ├── education_form.dart   # Formulir untuk menambahkan Education
+│   │   └── experience_form.dart  # Formulir untuk menambahkan Experience
+│   └── widgets/                  # Widget yang digunakan kembali
+│       ├── item_card.dart        # Widget kartu menu aksi
+│       └── left_drawer.dart      # Drawer untuk navigasi halaman
 ├── linux/                    # Proyek pembungkus native Linux
 ├── macos/                    # Proyek pembungkus native macOS
 ├── web/                      # Konfigurasi aplikasi Flutter Web
@@ -128,6 +134,16 @@ flutter analyze
 - Menambahkan scrolling agar seluruh konten dapat diakses pada layar dengan ukuran berbeda.
 - Melakukan pengujian tampilan dan interaksi aplikasi.
 
+**### Tutorial 9 & Tugas 8**
+
+- Melanjutkan pengembangan MyPortfolio Mobile dari Tugas 7.
+- Membuat formulir Add Experience dan Add Education untuk menambahkan informasi portofolio.
+- Menggunakan `StatefulWidget`, `Form`, dan `GlobalKey<FormState>` untuk mengelola input serta validasi formulir.
+- Menambahkan validasi pada input, termasuk pemeriksaan data kosong, URL thumbnail, dan urutan tanggal.
+- Mengimplementasikan tombol Simpan yang menampilkan dialog konfirmasi apabila data sudah valid.
+- Menghubungkan menu Add Experience dan Add Education pada halaman utama serta drawer menggunakan navigasi Flutter.
+- Menambahkan opsi Home pada drawer agar pengguna dapat kembali ke halaman utama.
+
 ## Refleksi
 
 ### Tugas 7
@@ -215,8 +231,38 @@ Sementara itu, full restart diperlukan ketika perubahan melibatkan konfigurasi n
 
 Dengan adanya fitur hot reload dan hot restart, proses pengembangan aplikasi Flutter menjadi lebih efisien karena saya tidak perlu selalu menjalankan ulang aplikasi secara keseluruhan setiap kali melakukan perubahan.
 
+**### Tugas 8**
+
+**1. Jelaskan perbedaan antara `Navigator.push()`, `Navigator.pushReplacement()`, dan `Navigator.pop()`. Metode apa yang digunakan untuk membuka formulir dari kartu aksi? Jelaskan juga bagaimana opsi Home di drawer membawa pengguna kembali ke halaman utama.**
+
+`Navigator.push()` digunakan untuk membuka halaman baru tanpa menghapus halaman sebelumnya dari navigation stack. Dengan begitu, pengguna masih bisa kembali ke halaman sebelumnya. Sementara itu, `Navigator.pushReplacement()` digunakan untuk membuka halaman baru sekaligus menggantikan halaman yang sedang dibuka. Berbeda dengan keduanya, `Navigator.pop()` digunakan untuk menutup halaman yang sedang aktif dan kembali ke halaman sebelumnya.
+
+Pada proyek MyPortfolio Mobile, saya menggunakan `Navigator.push()` pada kartu Add Experience dan Add Education untuk membuka formulir masing-masing. Saya memilih metode ini karena pengguna masih perlu bisa kembali ke halaman sebelumnya setelah selesai mengisi formulir.
+
+Untuk opsi Home pada drawer, saya menggunakan `Navigator.pushReplacement()` agar pengguna dapat kembali ke halaman utama tanpa harus melewati halaman-halaman yang sebelumnya dibuka ketika menekan tombol Back.
+
+**2. Bagaimana susunan `Scaffold`, `AppBar`, dan `Drawer` membantu menjaga struktur halaman tetap konsisten? Berikan satu contoh penggunaan warna tema portofolio di lebih dari satu halaman.**
+
+`Scaffold` membantu menyediakan struktur dasar halaman, seperti `AppBar`, `body`, dan `Drawer`. `AppBar` digunakan sebagai bagian atas halaman, sedangkan `Drawer` memudahkan pengguna berpindah ke halaman lain. Dengan menggunakan struktur yang sama, halaman Home, Experience, dan Education memiliki tampilan serta navigasi yang lebih konsisten.
+
+Salah satu contohnya adalah penggunaan warna utama dari tema aplikasi melalui `Theme.of(context).colorScheme.primary`. Warna ini dapat digunakan pada halaman utama maupun halaman formulir, sehingga tampilan aplikasi tetap memiliki keselarasan dengan tema portofolio yang sudah dibuat sebelumnya.
+
+**3. Mengapa tata letak tersebut dipilih untuk formulir? Jelaskan peran widget pengatur jarak dan widget penggulir ketika ruang layar terbatas.**
+
+Saya memilih tata letak vertikal untuk formulir karena menurut saya susunan ini lebih mudah diikuti ketika pengguna mengisi beberapa field secara berurutan. Widget seperti `Padding` digunakan untuk memberikan jarak dari tepi layar, sedangkan `SizedBox` membantu mengatur jarak antar-komponen agar formulir tidak terlihat terlalu rapat.
+
+Selain itu, saya menggunakan `SingleChildScrollView` agar formulir tetap bisa digulir ketika seluruh input tidak muat di layar. Hal ini cukup penting, terutama ketika pengguna mengisi formulir pada layar yang kecil atau ketika keyboard sedang terbuka. Dengan begitu, semua field tetap bisa diakses dengan nyaman.
+
+**4. Apa peran `GlobalKey<FormState>`, `validator`, dan `validate()` saat tombol Simpan ditekan? Berikan satu contoh nilai yang ditolak oleh validasi dan jelaskan mengapa memilih jenis input atau papan ketik saja belum cukup.**
+
+`GlobalKey<FormState>` digunakan untuk mengakses state dari widget `Form`, sehingga saya bisa menjalankan validasi pada seluruh field formulir. Setiap field memiliki `validator` yang bertugas memeriksa apakah input sudah sesuai dengan ketentuan. Ketika tombol Simpan ditekan, `validate()` akan menjalankan validator tersebut.
+
+Jika ada input yang tidak valid, `validate()` akan mengembalikan nilai `false` dan pesan kesalahan akan ditampilkan pada field terkait. Sebaliknya, jika semua input valid, formulir dapat dilanjutkan ke proses berikutnya, yaitu menampilkan dialog konfirmasi.
+
+Contohnya, input judul yang hanya berisi spasi akan ditolak karena sebenarnya belum memiliki isi yang bermakna. Menentukan jenis input atau keyboard memang dapat membantu pengguna memasukkan data dengan format tertentu, tetapi hal tersebut belum menjamin bahwa data yang dimasukkan sudah benar. Karena itu, validasi tetap diperlukan untuk memastikan data sesuai dengan ketentuan sebelum diproses.
+
 ## AI Disclosure
 
-Saya menggunakan ChatGPT sebagai alat bantu selama proses pengerjaan Tutorial 08 dan Tugas 7. AI digunakan untuk membantu memahami konsep dasar Flutter seperti widget tree, StatelessWidget, MaterialApp, dan BuildContext. 
+Saya menggunakan ChatGPT sebagai alat bantu selama proses pengerjaan Tutorial 08, Tutorial 09, serta Tugas 7 dan Tugas 8. AI digunakan untuk membantu memahami konsep dasar Flutter seperti widget tree, StatelessWidget, StatefulWidget, MaterialApp, BuildContext, serta konsep keseluruhan formulir.
 
 Saya tidak langsung menggunakan semua saran yang diberikan. Saya mencoba menjalankan aplikasi, melihat hasilnya, dan melakukan penyesuaian kembali apabila hasilnya belum sesuai dengan yang diinginkan. Misalnya, saya melakukan beberapa penyesuaian pada ukuran kartu, jumlah kolom GridView, serta posisi tombol Logout sampai mendapatkan tampilan yang lebih sesuai.
