@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
+import 'package:myportofolio_mobile/screens/education_form.dart';
 
 // Palet warna MyPortfolio.
 const Color burgundy = Color(0xFF500B1B);
@@ -8,6 +9,7 @@ const Color moss = Color(0xFF5B5429);
 const Color skyBlue = Color(0xFFB9C9CC);
 const Color sand = Color(0xFFEAE1D7);
 
+// Model untuk setiap item pada homepage.
 class ItemHomepage {
   final String name;
   final IconData icon;
@@ -16,6 +18,7 @@ class ItemHomepage {
   ItemHomepage(this.name, this.icon, this.color);
 }
 
+// Widget card yang digunakan pada homepage.
 class ItemCard extends StatelessWidget {
   final ItemHomepage item;
 
@@ -24,27 +27,31 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Menentukan warna ikon dan teks agar kontras dengan background.
-    final Color foregroundColor = item.color == moss || item.color == burgundy
-        ? Colors.white
-        : burgundy;
+    final Color foregroundColor =
+        item.color == moss || item.color == burgundy
+            ? Colors.white
+            : burgundy;
 
     return Material(
-      // Menggunakan warna yang sudah ditentukan untuk setiap tombol.
       color: item.color,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        // Aksi ketika kartu ditekan oleh pengguna.
+        borderRadius: BorderRadius.circular(12),
+
+        // Aksi ketika card ditekan.
         onTap: () {
-          // Memunculkan SnackBar ketika diklik
+          // Menampilkan SnackBar.
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                content: Text("Kamu telah menekan tombol ${item.name}!"),
+                content: Text(
+                  "Kamu telah menekan tombol ${item.name}!",
+                ),
               ),
             );
 
-          // Navigate ke halaman yang sesuai
+          // Navigasi ke halaman yang sesuai.
           if (item.name == "Add Experience") {
             Navigator.push(
               context,
@@ -52,16 +59,30 @@ class ItemCard extends StatelessWidget {
                 builder: (context) => const ExperienceFormPage(),
               ),
             );
+          } else if (item.name == "Add Education") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EducationFormPage(),
+              ),
+            );
           }
         },
+
         child: Container(
           padding: const EdgeInsets.all(8),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(item.icon, color: foregroundColor, size: 26.0),
-                const Padding(padding: EdgeInsets.all(3)),
+                Icon(
+                  item.icon,
+                  color: foregroundColor,
+                  size: 26.0,
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(3),
+                ),
                 Text(
                   item.name,
                   textAlign: TextAlign.center,

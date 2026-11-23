@@ -1,6 +1,7 @@
+
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
-import 'package:myportofolio_mobile/screens/experience_form.dart';
+import 'package:myportofolio_mobile/widgets/item_card.dart';
 
 // Palet warna MyPortfolio.
 const Color burgundy = Color(0xFF500B1B);
@@ -26,25 +27,27 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold menyediakan struktur visual dasar halaman (AppBar, Body, SnackBar).
     return Scaffold(
       backgroundColor: const Color(0xFFFAF7F4),
-      // AppBar menampilkan bar bagian atas halaman aplikasi.
+
       appBar: AppBar(
         title: const Text(
           'MyPortfolio',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: burgundy,
       ),
+
       drawer: const LeftDrawer(),
-      // Body halaman utama dengan padding di sekelilingnya.
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Baris horizontal untuk menampilkan 3 InfoCard secara sejajar.
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -56,7 +59,6 @@ class MyHomePage extends StatelessWidget {
 
             const SizedBox(height: 16.0),
 
-            // Bagian tengah: pesan sambutan dan kisi tombol menu portofolio.
             Center(
               child: Column(
                 children: [
@@ -71,7 +73,6 @@ class MyHomePage extends StatelessWidget {
                     ),
                   ),
 
-                  // GridView menampilkan kartu tombol dalam tata letak kisi 2 kolom.
                   GridView.count(
                     primary: false,
                     physics: const NeverScrollableScrollPhysics(),
@@ -80,14 +81,12 @@ class MyHomePage extends StatelessWidget {
                     mainAxisSpacing: 14,
                     crossAxisCount: 2,
                     childAspectRatio: 2.2,
-                    // shrinkWrap agar ukuran kisi menyesuaikan tinggi konten anak.
                     shrinkWrap: true,
                     children: items.take(4).map((ItemHomepage item) {
                       return ItemCard(item);
                     }).toList(),
                   ),
 
-                  // Tombol Logout ditampilkan memanjang di tengah bawah.
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: SizedBox(
@@ -107,100 +106,35 @@ class MyHomePage extends StatelessWidget {
 }
 
 class InfoCard extends StatelessWidget {
-  // Kartu informasi yang menampilkan judul (title) dan isi (content).
   final String title;
   final String content;
 
-  const InfoCard({super.key, required this.title, required this.content});
+  const InfoCard({
+    super.key,
+    required this.title,
+    required this.content,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      // Memberikan efek bayangan kartu elevasi 2 unit.
       color: Colors.white,
       elevation: 2.0,
       child: Container(
         height: 100,
-        // Menyesuaikan lebar kartu dengan proporsi layar (dibagi 3.5).
         width: MediaQuery.of(context).size.width / 3.5,
         padding: const EdgeInsets.all(16.0),
-        // Menyusun teks title dan content secara vertikal.
         child: Column(
           children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8.0),
             Text(content),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class ItemHomepage {
-  final String name;
-  final IconData icon;
-  final Color color;
-
-  ItemHomepage(this.name, this.icon, this.color);
-}
-
-class ItemCard extends StatelessWidget {
-  final ItemHomepage item;
-
-  const ItemCard(this.item, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Menentukan warna ikon dan teks agar kontras dengan background.
-    final Color foregroundColor = item.color == moss || item.color == burgundy
-        ? Colors.white
-        : burgundy;
-
-    return Material(
-      // Menggunakan warna yang sudah ditentukan untuk setiap tombol.
-      color: item.color,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        // Aksi ketika kartu ditekan oleh pengguna.
-        onTap: () {
-          // Memunculkan SnackBar ketika diklik
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text("Kamu telah menekan tombol ${item.name}!"),
-              ),
-            );
-          // Navigate ke halaman yang sesuai
-          if (item.name == "Add Experience") {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const ExperienceFormPage(),
-              ),
-            );
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(item.icon, color: foregroundColor, size: 26.0),
-                const Padding(padding: EdgeInsets.all(3)),
-                Text(
-                  item.name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: foregroundColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );
