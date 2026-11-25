@@ -1,6 +1,10 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/education_form.dart';
+import 'package:myportofolio_mobile/services/auth_state.dart';
+import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 
 // Palet warna MyPortfolio.
 const Color burgundy = Color(0xFF500B1B);
@@ -27,10 +31,9 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Menentukan warna ikon dan teks agar kontras dengan background.
-    final Color foregroundColor =
-        item.color == moss || item.color == burgundy
-            ? Colors.white
-            : burgundy;
+    final Color foregroundColor = item.color == moss || item.color == burgundy
+        ? Colors.white
+        : burgundy;
 
     return Material(
       color: item.color,
@@ -39,20 +42,22 @@ class ItemCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
 
         // Aksi ketika card ditekan.
-        onTap: () {
+        onTap: () async {
           // Menampilkan SnackBar.
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                content: Text(
-                  "Kamu telah menekan tombol ${item.name}!",
-                ),
+                content: Text("Kamu telah menekan tombol ${item.name}!"),
               ),
             );
 
           // Navigasi ke halaman yang sesuai.
           if (item.name == "Add Experience") {
+            final loggedIn = await ensureLoggedIn(context);
+
+            if (!context.mounted || !loggedIn) return;
+
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -60,12 +65,24 @@ class ItemCard extends StatelessWidget {
               ),
             );
           } else if (item.name == "Add Education") {
+            final loggedIn = await ensureLoggedIn(context);
+
+            if (!context.mounted || !loggedIn) return;
+
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => const EducationFormPage(),
               ),
             );
+          } else if (item.name == "Logout") {
+            await context.read<AuthState>().logout();
+
+            if (!context.mounted) return;
+
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Logout successful')));
           }
         },
 
@@ -75,14 +92,8 @@ class ItemCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  item.icon,
-                  color: foregroundColor,
-                  size: 26.0,
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(3),
-                ),
+                Icon(item.icon, color: foregroundColor, size: 26.0),
+                const Padding(padding: EdgeInsets.all(3)),
                 Text(
                   item.name,
                   textAlign: TextAlign.center,

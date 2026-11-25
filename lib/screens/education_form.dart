@@ -106,9 +106,7 @@ class _EducationFormPageState extends State<EducationFormPage> {
     if (_endedAt.isNotEmpty &&
         DateTime.parse(_endedAt).isBefore(DateTime.parse(_startedAt))) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("End Date cannot be before Start Date."),
-        ),
+        const SnackBar(content: Text("End Date cannot be before Start Date.")),
       );
       return;
     }
@@ -150,9 +148,7 @@ class _EducationFormPageState extends State<EducationFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(
-          child: Text('Add Education Form'),
-        ),
+        title: const Center(child: Text('Add Education Form')),
         backgroundColor: const Color(0xFF500B1B),
         foregroundColor: Colors.white,
       ),
@@ -251,8 +247,7 @@ class _EducationFormPageState extends State<EducationFormPage> {
                   validator: (value) {
                     final trimmedValue = value?.trim() ?? "";
 
-                    if (trimmedValue.isNotEmpty &&
-                        !_isValidUrl(trimmedValue)) {
+                    if (trimmedValue.isNotEmpty && !_isValidUrl(trimmedValue)) {
                       return "Enter a valid HTTP or HTTPS URL!";
                     }
 
@@ -270,9 +265,7 @@ class _EducationFormPageState extends State<EducationFormPage> {
                     ListTile(
                       title: const Text("Start Date"),
                       subtitle: Text(
-                        _startedAt.isEmpty
-                            ? "Select start date"
-                            : _startedAt,
+                        _startedAt.isEmpty ? "Select start date" : _startedAt,
                       ),
                       trailing: const Icon(Icons.calendar_today),
                       shape: RoundedRectangleBorder(

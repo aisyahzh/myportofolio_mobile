@@ -1,4 +1,10 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
+import 'package:myportofolio_mobile/models/experience.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/services/auth_state.dart';
+import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
 
 class ExperienceFormPage extends StatefulWidget {
@@ -20,6 +26,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   String _endedAt = "";
 
   bool _showStartDateError = false;
+  bool _isSubmitting = false;
 
   final List<String> _categories = [
     'Organization',
@@ -30,7 +37,9 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   ];
 
   String _formatDate(DateTime date) {
-    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    return "${date.year}-"
+        "${date.month.toString().padLeft(2, '0')}-"
+        "${date.day.toString().padLeft(2, '0')}";
   }
 
   bool _isValidUrl(String value) {
@@ -43,55 +52,53 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   }
 
   Future<void> _selectStartDate() async {
-    final DateTime now = DateTime.now();
+    final now = DateTime.now();
 
-    final DateTime? pickedDate = await showDatePicker(
+    final pickedDate = await showDatePicker(
       context: context,
       initialDate: now,
       firstDate: DateTime(2000),
       lastDate: now,
     );
 
-    if (pickedDate != null) {
-      setState(() {
-        _startedAt = _formatDate(pickedDate);
-        _showStartDateError = false;
+    if (pickedDate == null) return;
 
-        // End date harus setelah atau sama dengan start date.
-        if (_endedAt.isNotEmpty &&
-            DateTime.parse(_endedAt).isBefore(pickedDate)) {
-          _endedAt = "";
-        }
-      });
-    }
+    setState(() {
+      _startedAt = _formatDate(pickedDate);
+      _showStartDateError = false;
+
+      // Jika End Date lebih awal dari Start Date,
+      // kosongkan End Date agar pengguna memilih ulang.
+      if (_endedAt.isNotEmpty &&
+          DateTime.parse(_endedAt).isBefore(pickedDate)) {
+        _endedAt = "";
+      }
+    });
   }
 
   Future<void> _selectEndDate() async {
-    final DateTime now = DateTime.now();
+    final now = DateTime.now();
 
-    final DateTime startDate = _startedAt.isEmpty
+    final startDate = _startedAt.isEmpty
         ? DateTime(2000)
         : DateTime.parse(_startedAt);
 
-    final DateTime initialDate =
-        startDate.isAfter(now) ? now : now;
-
-    final DateTime? pickedDate = await showDatePicker(
+    final pickedDate = await showDatePicker(
       context: context,
-      initialDate: initialDate,
+      initialDate: now,
       firstDate: startDate,
       lastDate: now,
     );
 
-    if (pickedDate != null) {
-      setState(() {
-        _endedAt = _formatDate(pickedDate);
-      });
-    }
+    if (pickedDate == null) return;
+
+    setState(() {
+      _endedAt = _formatDate(pickedDate);
+    });
   }
 
   void _resetForm() {
-    _formKey.currentState!.reset();
+    _formKey.currentState?.reset();
 
     setState(() {
       _title = "";
@@ -105,7 +112,9 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     });
   }
 
-  void _saveForm() {
+  Future<void> _saveForm() async {
+    if (_isSubmitting) return;
+
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -120,54 +129,127 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     if (_endedAt.isNotEmpty &&
         DateTime.parse(_endedAt).isBefore(DateTime.parse(_startedAt))) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("End Date cannot be before Start Date."),
-        ),
+        const SnackBar(content: Text("End Date cannot be before Start Date.")),
       );
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Experience Saved!'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Title: $_title'),
-                Text('Role: ${_role.isEmpty ? "-" : _role}'),
-                Text('Description: $_description'),
-                Text('Category: $_category'),
-                Text('Thumbnail: ${_thumbnail.isEmpty ? "-" : _thumbnail}'),
-                Text('Start Date: $_startedAt'),
-                Text('End Date: ${_endedAt.isEmpty ? "Ongoing" : _endedAt}'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                _resetForm();
-              },
-            ),
-          ],
-        );
-      },
+    // Pastikan pengguna sudah login.
+    final loggedIn = await ensureLoggedIn(context);
+
+    if (!loggedIn || !mounted) return;
+
+    final authState = context.read<AuthState>();
+    final apiClient = context.read<ApiClient>();
+
+    final token = authState.token;
+
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Please login first.")));
+      return;
+    }
+
+    // Buat object Experience sesuai model Django.
+    final newExperience = Experience(
+      title: _title.trim(),
+      role: _role.trim(),
+      description: _description.trim(),
+      category: _category,
+      thumbnail: _thumbnail.trim().isEmpty ? null : _thumbnail.trim(),
+      startedAt: DateTime.parse(_startedAt),
+      endedAt: _endedAt.isEmpty ? null : DateTime.parse(_endedAt),
     );
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // Kirim data Experience ke backend.
+      await apiClient.createExperience(newExperience, token: token);
+
+      if (!mounted) return;
+
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      // Tampilkan data yang berhasil disimpan.
+      showDialog(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text("Experience Saved!"),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Title: ${newExperience.title}"),
+                  Text(
+                    "Role: ${newExperience.role.isEmpty ? "-" : newExperience.role}",
+                  ),
+                  Text("Description: ${newExperience.description}"),
+                  Text("Category: ${newExperience.category}"),
+                  Text("Thumbnail: ${newExperience.thumbnail ?? "-"}"),
+                  Text("Start Date: ${_formatDate(newExperience.startedAt)}"),
+                  Text(
+                    "End Date: ${newExperience.endedAt == null ? "Ongoing" : _formatDate(newExperience.endedAt!)}",
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: const Text("OK"),
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  _resetForm();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      // Jika token sudah tidak valid.
+      if (e.statusCode == 401) {
+        await authState.logout();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Session expired. Please login again.")),
+        );
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isSubmitting = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to save experience: $e")));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(
-          child: Text('Add Experience Form'),
-        ),
+        title: const Center(child: Text("Add Experience Form")),
         backgroundColor: const Color(0xFF500B1B),
         foregroundColor: Colors.white,
       ),
@@ -254,14 +336,12 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     ),
                   ),
                   initialValue: _category,
-                  items: _categories
-                      .map(
-                        (category) => DropdownMenuItem(
-                          value: category,
-                          child: Text(category),
-                        ),
-                      )
-                      .toList(),
+                  items: _categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
                   onChanged: (newValue) {
                     if (newValue != null) {
                       setState(() {
@@ -289,8 +369,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                   validator: (value) {
                     final trimmedValue = value?.trim() ?? "";
 
-                    if (trimmedValue.isNotEmpty &&
-                        !_isValidUrl(trimmedValue)) {
+                    if (trimmedValue.isNotEmpty && !_isValidUrl(trimmedValue)) {
                       return "Enter a valid HTTP or HTTPS URL!";
                     }
 
@@ -308,16 +387,14 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     ListTile(
                       title: const Text("Start Date"),
                       subtitle: Text(
-                        _startedAt.isEmpty
-                            ? "Select start date"
-                            : _startedAt,
+                        _startedAt.isEmpty ? "Select start date" : _startedAt,
                       ),
                       trailing: const Icon(Icons.calendar_today),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5.0),
                         side: const BorderSide(color: Colors.grey),
                       ),
-                      onTap: _selectStartDate,
+                      onTap: _isSubmitting ? null : _selectStartDate,
                     ),
                     if (_showStartDateError)
                       const Padding(
@@ -344,7 +421,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     borderRadius: BorderRadius.circular(5.0),
                     side: const BorderSide(color: Colors.grey),
                   ),
-                  onTap: _selectEndDate,
+                  onTap: _isSubmitting ? null : _selectEndDate,
                 ),
               ),
 
@@ -358,8 +435,17 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                       backgroundColor: const Color(0xFF500B1B),
                       foregroundColor: Colors.white,
                     ),
-                    onPressed: _saveForm,
-                    child: const Text('Save'),
+                    onPressed: _isSubmitting ? null : _saveForm,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text("Save"),
                   ),
                 ),
               ),
